@@ -27,9 +27,12 @@ describe('renderers', () => {
     expect(md).toContain('Security');
     expect(md).toContain('scal.db');
     expect(md).toContain('gate.live-secret');
+    expect(md).toContain('62.5');
+    expect(md).toContain('a.ts:3');
   });
   it('renderTerminal produces a non-empty summary', () => {
-    expect(renderTerminal(report).length).toBeGreaterThan(0);
     expect(renderTerminal(report)).toContain('62.5');
+    expect(renderTerminal(report)).toContain('L2');
+    expect(renderTerminal(report)).toContain('Beta');
   });
 });
