@@ -1,11 +1,17 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import type { CollectorContext } from './types.js';
 
 const IGNORE = new Set(['node_modules', '.git', 'dist', '.next', 'build', 'coverage']);
 
 function walk(root: string, current: string, out: string[]): void {
-  for (const entry of readdirSync(current, { withFileTypes: true })) {
+  let entries;
+  try {
+    entries = readdirSync(current, { withFileTypes: true });
+  } catch {
+    return; // skip unreadable directories
+  }
+  for (const entry of entries) {
     if (entry.isDirectory()) {
       if (IGNORE.has(entry.name)) continue;
       walk(root, join(current, entry.name), out);
