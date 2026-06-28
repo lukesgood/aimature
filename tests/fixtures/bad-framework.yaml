@@ -1,0 +1,9 @@
+pillars:
+  - id: security
+    title: Security
+    weight: 0.5
+    criteria:
+      - { id: sec.secrets, title: Secrets, weight: 1 }
+levels:
+  - { level: L0, min: 0, max: 40, label: Prototype }
+gates: []

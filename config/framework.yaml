@@ -1,0 +1,43 @@
+pillars:
+  - id: security
+    title: Security
+    weight: 0.30
+    criteria:
+      - { id: sec.secrets, title: Hardcoded secrets/keys, weight: 0.35 }
+      - { id: sec.deps,    title: Dependency vulnerabilities, weight: 0.25 }
+      - { id: sec.authz,   title: Authentication & authorization, weight: 0.25 }
+      - { id: sec.input,   title: Input validation & injection defense, weight: 0.15 }
+  - id: reliability
+    title: Reliability
+    weight: 0.25
+    criteria:
+      - { id: rel.errors,  title: Error handling, weight: 0.4 }
+      - { id: rel.tests,   title: Test coverage, weight: 0.4 }
+      - { id: rel.logging, title: Logging & monitoring, weight: 0.2 }
+  - id: scalability
+    title: Scalability
+    weight: 0.20
+    criteria:
+      - { id: scal.architecture, title: Architecture layering, weight: 0.4 }
+      - { id: scal.state,        title: Statelessness, weight: 0.3 }
+      - { id: scal.db,           title: DB/query efficiency, weight: 0.3 }
+  - id: maintainability
+    title: Maintainability & Operations
+    weight: 0.25
+    criteria:
+      - { id: maint.structure,   title: Code structure & complexity, weight: 0.3 }
+      - { id: maint.conventions, title: Convention consistency, weight: 0.2 }
+      - { id: maint.docs,        title: Documentation, weight: 0.2 }
+      - { id: maint.cicd,        title: CI/CD & deployment config, weight: 0.3 }
+levels:
+  - { level: L0, min: 0,  max: 40,  label: Prototype }
+  - { level: L1, min: 40, max: 60,  label: MVP }
+  - { level: L2, min: 60, max: 75,  label: Beta }
+  - { level: L3, min: 75, max: 90,  label: Production-Ready }
+  - { level: L4, min: 90, max: 100, label: Scale-Ready }
+gates:
+  - id: gate.live-secret
+    criterionId: sec.secrets
+    whenScoreBelow: 30
+    capLevel: L1
+    description: Exposed/live secret detected — caps maturity at L1 regardless of score.
