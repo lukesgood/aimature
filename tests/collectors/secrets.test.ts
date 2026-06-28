@@ -25,4 +25,26 @@ describe('secretsCollector', () => {
     }));
     expect(fs[0].score).toBe(90);
   });
+
+  it('flags a generic keyword pattern (token assignment) with file:line evidence', async () => {
+    const fs = await secretsCollector.collect(ctx({
+      'src/auth.ts': 'const token = "abcd1234efgh";',
+    }));
+    const f = fs[0];
+    expect(f.criterionId).toBe('sec.secrets');
+    expect(f.score).toBe(5);
+    expect(f.evidence[0].file).toBe('src/auth.ts');
+    expect(f.evidence[0].line).toBe(1);
+  });
+
+  it('flags a private-key header with file:line evidence', async () => {
+    const fs = await secretsCollector.collect(ctx({
+      'certs/private.pem': '-----BEGIN RSA PRIVATE KEY-----',
+    }));
+    const f = fs[0];
+    expect(f.criterionId).toBe('sec.secrets');
+    expect(f.score).toBe(5);
+    expect(f.evidence[0].file).toBe('certs/private.pem');
+    expect(f.evidence[0].line).toBe(1);
+  });
 });
