@@ -79,7 +79,7 @@ export function score(framework: Framework, findings: Finding[]): Report {
   for (const gate of framework.gates) {
     const cs = criterionScores.get(gate.criterionId);
     if (cs !== undefined && cs < gate.whenScoreBelow) {
-      if (levelIndex(gate.capLevel) < levelIndex(level)) {
+      if (!cappedBy || levelIndex(gate.capLevel) < levelIndex(level)) {
         level = gate.capLevel;
         label = framework.levels[levelIndex(gate.capLevel)].label;
         cappedBy = gate.id;
