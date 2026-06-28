@@ -40,4 +40,4 @@ gates:
     criterionId: sec.secrets
     whenScoreBelow: 30
     capLevel: L1
-    description: Exposed/live secret detected — caps maturity at L1 regardless of score.
+    description: Exposed/live secret detected — caps maturity at L1 when it would otherwise rank higher.
