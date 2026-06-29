@@ -6,15 +6,31 @@ import { Command } from 'commander';
 import { analyze } from './core/analyze.js';
 import { renderJson, renderMarkdown, renderTerminal } from './report/render.js';
 import { createAnthropicClient, type LlmClient } from './llm/reviewer.js';
+import { createClaudeCliClient, claudeCliAvailable, type CliRunner } from './llm/cli.js';
 import type { ExecFn } from './adapters/types.js';
 
 export interface CliDeps {
   write: (s: string) => void;
   env: Record<string, string | undefined>;
+  /** Injectable runner for the Claude Code CLI provider; defaults to a real spawn. */
+  cliRunner?: CliRunner;
 }
 
 const realExec: ExecFn = (cmd, args, cwd) => {
   const r = spawnSync(cmd, args, { cwd, encoding: 'utf8' });
+  return { stdout: r.stdout ?? '', status: r.status };
+};
+
+const realCliRunner: CliRunner = (cmd, args, input) => {
+  // `shell: true` on Windows so the `claude` shim (claude.cmd) resolves; args are
+  // static and safe, and the untrusted prompt rides on stdin, not the command line.
+  const r = spawnSync(cmd, args, {
+    input,
+    encoding: 'utf8',
+    maxBuffer: 16 * 1024 * 1024,
+    shell: process.platform === 'win32',
+  });
+  if (r.error) return { stdout: '', status: 127 };
   return { stdout: r.stdout ?? '', status: r.status };
 };
 
@@ -25,23 +41,42 @@ export async function runScan(argv: string[], deps: CliDeps): Promise<number> {
   program
     .name('aim')
     .command('scan <path>')
-    .option('--llm', 'force LLM-assisted analysis (requires ANTHROPIC_API_KEY)')
+    .option('--llm', 'enable LLM-assisted analysis')
+    .option('--llm-provider <p>', 'cli | api (default: cli when --llm is set)')
+    .option('--llm-model <id>', 'model id for the LLM layer')
     .option('--no-tools', 'skip external tool adapters')
     .option('--format <type>', 'terminal | json | markdown', 'terminal')
     .option('--out <file>', 'write report to a file')
     .option('--config <file>', 'custom framework.yaml path')
     .action(async (path: string, opts: any) => {
       const key = deps.env.ANTHROPIC_API_KEY;
+      const cliRunner = deps.cliRunner ?? realCliRunner;
       let llmClient: LlmClient | null = null;
-      if (opts.llm) {
-        llmClient = createAnthropicClient('claude-opus-4-8', key);
-        if (!llmClient) {
-          deps.write('Error: --llm requires ANTHROPIC_API_KEY\n');
-          exitCode = 2;
-          return;
+
+      // Resolve provider: explicit flag wins; otherwise default to the Claude
+      // Code CLI when --llm is set, or the API path when only a key is present.
+      const provider: string | undefined =
+        opts.llmProvider ?? (opts.llm ? 'cli' : key ? 'api' : undefined);
+
+      if (opts.llm || opts.llmProvider) {
+        if (provider === 'api') {
+          llmClient = createAnthropicClient(opts.llmModel ?? 'claude-opus-4-8', key);
+          if (!llmClient) {
+            deps.write('Error: --llm-provider api requires ANTHROPIC_API_KEY\n');
+            exitCode = 2;
+            return;
+          }
+        } else {
+          // CLI provider — reuses Claude Code's own auth (subscription or Bedrock).
+          if (!claudeCliAvailable(cliRunner)) {
+            deps.write('Error: Claude Code CLI (claude) not found on PATH\n');
+            exitCode = 2;
+            return;
+          }
+          llmClient = createClaudeCliClient({ runner: cliRunner, model: opts.llmModel });
         }
       } else if (key) {
-        llmClient = createAnthropicClient('claude-opus-4-8', key);
+        llmClient = createAnthropicClient(opts.llmModel ?? 'claude-opus-4-8', key);
       }
 
       const report = await analyze({

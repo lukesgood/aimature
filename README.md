@@ -38,18 +38,25 @@ npm install
 ## Usage
 
 ```bash
-aim scan <path> [--llm] [--no-tools] [--format json|markdown] [--out file] [--config file]
+aim scan <path> [--llm] [--llm-provider cli|api] [--llm-model id] [--no-tools] [--format json|markdown] [--out file] [--config file]
 ```
 
 **Options:**
 
 | Flag | Description |
 |------|-------------|
-| `--llm` | Enable the LLM layer (requires `ANTHROPIC_API_KEY`) |
+| `--llm` | Enable the LLM layer |
+| `--llm-provider cli\|api` | LLM provider. Default `cli` when `--llm` is set |
+| `--llm-model <id>` | Model id for the LLM layer (optional) |
 | `--no-tools` | Skip external tool adapters (e.g., `npm audit`) |
 | `--format json\|markdown` | Output format (default: terminal table) |
 | `--out <file>` | Write report to a file instead of stdout |
 | `--config <file>` | Path to a custom `framework.yaml` configuration |
+
+**LLM providers** — the LLM layer (Layer 3) supports two providers:
+
+- **`cli` (default)** — delegates to the **Claude Code CLI** (`claude -p`) in headless mode. AIMature handles no keys itself; it reuses whatever authentication Claude Code is configured with — your logged-in subscription session, or **AWS Bedrock** when `CLAUDE_CODE_USE_BEDROCK=1` and AWS credentials/region (or `AWS_BEARER_TOKEN_BEDROCK`) are set in the environment. Requires the `claude` CLI on your `PATH`.
+- **`api`** — calls the Anthropic API directly via the SDK. Requires `ANTHROPIC_API_KEY`.
 
 **Examples:**
 
@@ -57,8 +64,14 @@ aim scan <path> [--llm] [--no-tools] [--format json|markdown] [--out file] [--co
 # Quick heuristic scan (fastest, no external calls):
 aim scan ./my-service --no-tools
 
-# Full scan with LLM review:
-ANTHROPIC_API_KEY=sk-... aim scan ./my-service --llm
+# Full scan, LLM review via the Claude Code CLI (reuses Claude Code's auth):
+aim scan ./my-service --llm
+
+# Route the LLM layer through AWS Bedrock (via Claude Code):
+CLAUDE_CODE_USE_BEDROCK=1 AWS_REGION=us-east-1 aim scan ./my-service --llm
+
+# Use the direct Anthropic API instead of the CLI:
+ANTHROPIC_API_KEY=sk-... aim scan ./my-service --llm --llm-provider api
 
 # JSON output for CI integration:
 aim scan ./my-service --format json --out report.json
@@ -72,7 +85,7 @@ AIMature runs analysis in three layers. Each layer is independent and absorbs it
 
 2. **Layer 2 — External Tools** (skipped if `--no-tools` or no exec context): Runs `npm audit` and similar adapters when applicable. Provides higher-precision vulnerability data. Skipped gracefully if the tool is not installed.
 
-3. **Layer 3 — LLM Review** (requires `--llm` and `ANTHROPIC_API_KEY`): Sends summarized code context to Claude for semantic scoring of criteria that heuristics cannot assess (architecture layering, error handling patterns, input validation logic). Produces findings with 0.7 confidence. Set `ANTHROPIC_API_KEY` in your environment to enable this layer.
+3. **Layer 3 — LLM Review** (requires `--llm`): Sends summarized code context to Claude for semantic scoring of criteria that heuristics cannot assess (architecture layering, error handling patterns, input validation logic). Produces findings with 0.7 confidence. By default it delegates to the **Claude Code CLI** (`--llm-provider cli`), reusing Claude Code's authentication (subscription or AWS Bedrock); use `--llm-provider api` with `ANTHROPIC_API_KEY` to call the Anthropic API directly. If the provider is unavailable the layer is skipped and its criteria are reported as uncovered.
 
 ## How Scoring Works
 
