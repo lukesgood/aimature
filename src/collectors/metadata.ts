@@ -4,8 +4,16 @@ import { makeFinding, type Finding } from '../core/types.js';
 const CONF = 0.6;
 
 function hasTests(files: string[]): boolean {
-  return files.some((f) => /\.(test|spec)\.[jt]sx?$/.test(f))
-    || files.some((f) => /(^|\/)(tests|__tests__)\//.test(f));
+  return files.some((f) =>
+    // *.test.* / *.spec.* (js/ts) and *_spec.rb etc.
+    /\.(test|spec)\.[jt]sx?$/.test(f)
+    // a file named exactly test.* or spec.* (e.g. p-limit's root test.js)
+    || /(^|\/)(test|spec)\.[jt]sx?$/.test(f)
+    // a test/tests/spec/__tests__ directory anywhere
+    || /(^|\/)(tests?|specs?|__tests__)\//.test(f)
+    // python/go conventions: test_x.py, x_test.py, x_test.go, *_spec.rb
+    || /(^|\/)test_[^/]+\.py$/.test(f)
+    || /_(test|spec)\.(py|go|rb)$/.test(f));
 }
 
 function hasCI(files: string[]): boolean {

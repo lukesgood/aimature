@@ -26,4 +26,19 @@ describe('metadataCollector', () => {
     expect(byId['maint.cicd']).toBe(20);
     expect(byId['maint.docs']).toBe(10);
   });
+
+  it('detects common test layouts beyond *.test.*', async () => {
+    const layouts = [
+      ['index.js', 'test.js'],            // root test.js (e.g. p-limit, ava)
+      ['lib/x.js', 'test/x.js'],          // singular test/ dir (mocha)
+      ['app/x.js', 'spec/x_spec.rb'],     // spec/ dir
+      ['pkg/x.py', 'pkg/test_x.py'],      // python test_*.py
+      ['pkg/y.py', 'pkg/y_test.py'],      // python/go *_test
+    ];
+    for (const files of layouts) {
+      const fs = await metadataCollector.collect(ctx(files));
+      const score = fs.find((f) => f.criterionId === 'rel.tests')!.score;
+      expect(score, `expected tests detected for ${files.join(', ')}`).toBe(80);
+    }
+  });
 });
