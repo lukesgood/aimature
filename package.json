@@ -1,12 +1,44 @@
 {
   "name": "aimature",
   "version": "0.1.0",
+  "description": "Production-maturity analyzer for vibe-coded apps — scores a repo across Security, Reliability, Scalability, and Maintainability/Ops using heuristics, external tools, and optional LLM review.",
+  "keywords": [
+    "cli",
+    "code-analysis",
+    "maturity",
+    "production-readiness",
+    "static-analysis",
+    "security",
+    "vibe-coding",
+    "llm",
+    "claude"
+  ],
   "type": "module",
+  "license": "MIT",
+  "author": "iyham",
+  "homepage": "https://github.com/lukesgood/aimature#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lukesgood/aimature.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lukesgood/aimature/issues"
+  },
   "bin": { "aim": "./dist/cli.js" },
+  "files": [
+    "dist",
+    "config",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",

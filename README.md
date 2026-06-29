@@ -1,5 +1,9 @@
 # AIMature
 
+[![CI](https://github.com/lukesgood/aimature/actions/workflows/ci.yml/badge.svg)](https://github.com/lukesgood/aimature/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%E2%89%A518-brightgreen.svg)](https://nodejs.org)
+
 AIMature is a CLI tool that scores a repository's production maturity across four pillars, producing a level (L0–L4) and actionable recommendations for improvement.
 
 ## What AIMature Is
@@ -90,3 +94,14 @@ AIMature runs analysis in three layers. Each layer is independent and absorbs it
 ## How Scoring Works
 
 Each layer emits `Finding` objects (criterionId, score 0–100, confidence 0–1, evidence). When multiple findings exist for the same criterion (e.g., heuristic + LLM), they are merged by confidence-weighted average: higher-confidence sources dominate. Criterion scores are weighted within each pillar; pillar scores are weighted (Security 30%, Reliability 25%, Scalability 20%, Maintainability 25%) to produce the overall score. The score is mapped to a level band (L0–L4). Security gate rules are then applied as caps: if a gate criterion (e.g., `sec.secrets`) scores below a threshold and the natural level would be higher than the cap, the level is lowered and `cappedBy` is set in the report. Criteria with no findings from any layer are reported as "uncovered" rather than silently scored as zero.
+
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for setup,
+project layout, and the test-driven workflow. Please follow the
+[Code of Conduct](CODE_OF_CONDUCT.md). For security reports, see
+[SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE) © iyham
