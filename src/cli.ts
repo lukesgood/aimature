@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { Command } from 'commander';
 import { analyze } from './core/analyze.js';
 import { renderJson, renderMarkdown, renderTerminal } from './report/render.js';
@@ -69,7 +70,7 @@ export async function runScan(argv: string[], deps: CliDeps): Promise<number> {
 }
 
 // Entry point when run as a binary.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   runScan(process.argv.slice(2), { write: (s) => process.stdout.write(s), env: process.env })
     .then((code) => process.exit(code));
 }
