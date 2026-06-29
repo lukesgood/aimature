@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import type { CollectorContext } from './types.js';
 
-const IGNORE = new Set(['node_modules', '.git', 'dist', '.next', 'build', 'coverage']);
+const IGNORE = new Set(['node_modules', '.git', 'dist', '.next', 'build', 'coverage', '.superpowers']);
 
 function walk(root: string, current: string, out: string[]): void {
   let entries;

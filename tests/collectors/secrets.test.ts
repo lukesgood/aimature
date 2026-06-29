@@ -47,4 +47,27 @@ describe('secretsCollector', () => {
     expect(f.evidence[0].file).toBe('certs/private.pem');
     expect(f.evidence[0].line).toBe(1);
   });
+
+  it('ignores secrets in non-production paths (test fixtures, test files, diffs)', async () => {
+    const dummy = 'const k = "AKIAABCDEFGHIJKLMNOP";';
+    const fs = await secretsCollector.collect(ctx({
+      'tests/fixtures/vulnerable/src/config.ts': dummy,
+      'tests/collectors/secrets.test.ts': dummy,
+      'src/auth.spec.ts': dummy,
+      'app/__mocks__/creds.ts': dummy,
+      '.superpowers/sdd/review-abc.diff': dummy,
+      'patches/fix.patch': dummy,
+    }));
+    expect(fs[0].score).toBe(90); // all hits were dummy/test data — none counts
+  });
+
+  it('still flags a real secret even when test fixtures also contain dummies', async () => {
+    const dummy = 'const k = "AKIAABCDEFGHIJKLMNOP";';
+    const fs = await secretsCollector.collect(ctx({
+      'tests/fixtures/safe/config.ts': dummy,        // ignored
+      'src/server.ts': dummy,                        // production — flagged
+    }));
+    expect(fs[0].score).toBe(5);
+    expect(fs[0].evidence[0].file).toBe('src/server.ts');
+  });
 });

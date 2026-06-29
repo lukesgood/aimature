@@ -7,8 +7,19 @@ const PATTERNS: RegExp[] = [
   /-----BEGIN (RSA |EC )?PRIVATE KEY-----/,
 ];
 
+// Non-production paths where hardcoded "secrets" are normally intentional dummies
+// (test fixtures, test/spec sources, mocks) or dev/VCS artifacts (diffs/patches).
+// Flagging these as live secrets and capping production maturity is a false signal.
+const IGNORED_PATTERNS: RegExp[] = [
+  /\.(example|sample|md)$/i,
+  /(^|\/)\.env\.example$/,
+  /\.(diff|patch)$/i,
+  /\.(test|spec)\.[jt]sx?$/i,
+  /(^|\/)(tests?|specs?|__tests__|__mocks__|__fixtures__|fixtures|mocks|__snapshots__)\//,
+];
+
 function ignored(path: string): boolean {
-  return /\.(example|sample|md)$/i.test(path) || /(^|\/)\.env\.example$/.test(path);
+  return IGNORED_PATTERNS.some((re) => re.test(path));
 }
 
 export const secretsCollector: Collector = {
