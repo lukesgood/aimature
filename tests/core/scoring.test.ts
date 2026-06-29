@@ -23,6 +23,19 @@ describe('score', () => {
     expect(r.uncovered).toContain('rel.tests');
   });
 
+  it('excludes a fully-unmeasured pillar from the overall and flags it', () => {
+    // Cover only security, reliability, maintainability criteria; leave all scalability criteria uncovered.
+    const findings = fw.pillars
+      .filter((p) => p.id !== 'scalability')
+      .flatMap((p) => p.criteria.map((c) =>
+        makeFinding({ criterionId: c.id, score: 80, confidence: 1, source: 'heuristic' })));
+    const r = score(fw, findings);
+    const scal = r.pillars.find((p) => p.id === 'scalability')!;
+    expect(scal.measured).toBe(false);
+    // Every measured pillar scored 80, so the renormalized overall is 80 (scalability's 0 is NOT dragging it down).
+    expect(r.overallScore).toBeCloseTo(80, 5);
+  });
+
   it('caps level at L1 when a security gate trips', () => {
     // High scores everywhere except sec.secrets which trips the gate.
     const findings = fw.pillars.flatMap((p) =>

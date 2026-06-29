@@ -27,7 +27,7 @@ AIMature analyzes source code, configuration, and tooling signals to produce an 
 | L3 | 75–89 | Production-Ready |
 | L4 | 90–100 | Scale-Ready |
 
-Security gates can cap the final level (e.g., a live secret detected caps maturity at L1 regardless of other scores).
+Security gates can cap the final level (e.g., a live secret detected lowers the maturity level to at most L1 when it would otherwise rank higher (cap-only — it never raises a level)).
 
 ## Installation
 
@@ -72,7 +72,7 @@ AIMature runs analysis in three layers. Each layer is independent and absorbs it
 
 2. **Layer 2 — External Tools** (skipped if `--no-tools` or no exec context): Runs `npm audit` and similar adapters when applicable. Provides higher-precision vulnerability data. Skipped gracefully if the tool is not installed.
 
-3. **Layer 3 — LLM Review** (requires `--llm` and `ANTHROPIC_API_KEY`): Sends summarized code context to Claude for semantic scoring of criteria that heuristics cannot assess (architecture layering, error handling patterns, input validation logic). Produces findings with 0.9 confidence. Set `ANTHROPIC_API_KEY` in your environment to enable this layer.
+3. **Layer 3 — LLM Review** (requires `--llm` and `ANTHROPIC_API_KEY`): Sends summarized code context to Claude for semantic scoring of criteria that heuristics cannot assess (architecture layering, error handling patterns, input validation logic). Produces findings with 0.7 confidence. Set `ANTHROPIC_API_KEY` in your environment to enable this layer.
 
 ## How Scoring Works
 

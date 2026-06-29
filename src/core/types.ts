@@ -61,6 +61,7 @@ export interface PillarResult {
   id: string;
   title: string;
   score: number;
+  measured?: boolean;   // false when the pillar had no covered criteria
   criteria: CriterionResult[];
 }
 

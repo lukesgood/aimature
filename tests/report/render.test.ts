@@ -35,4 +35,35 @@ describe('renderers', () => {
     expect(renderTerminal(report)).toContain('L2');
     expect(renderTerminal(report)).toContain('Beta');
   });
+
+  it('renderMarkdown shows "not measured" for a pillar with measured: false', () => {
+    const unmeasuredReport: Report = {
+      overallScore: 80,
+      level: 'L3',
+      levelLabel: 'Production-Ready',
+      pillars: [
+        { id: 'scalability', title: 'Scalability', score: 0, measured: false, criteria: [] },
+      ],
+      uncovered: [],
+      recommendations: [],
+    };
+    const md = renderMarkdown(unmeasuredReport);
+    expect(md).toContain('not measured');
+    expect(md).not.toContain('| Scalability | 0.0 |');
+  });
+
+  it('renderTerminal shows "n/a" for a pillar with measured: false', () => {
+    const unmeasuredReport: Report = {
+      overallScore: 80,
+      level: 'L3',
+      levelLabel: 'Production-Ready',
+      pillars: [
+        { id: 'scalability', title: 'Scalability', score: 0, measured: false, criteria: [] },
+      ],
+      uncovered: [],
+      recommendations: [],
+    };
+    const term = renderTerminal(unmeasuredReport);
+    expect(term).toContain('n/a');
+  });
 });

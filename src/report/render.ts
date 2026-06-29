@@ -16,7 +16,7 @@ export function renderMarkdown(r: Report): string {
   lines.push('');
   lines.push('| Pillar | Score |');
   lines.push('|---|---|');
-  for (const p of r.pillars) lines.push(`| ${p.title} | ${p.score.toFixed(1)} |`);
+  for (const p of r.pillars) lines.push(`| ${p.title} | ${p.measured === false ? 'n/a (not measured)' : p.score.toFixed(1)} |`);
   lines.push('');
   for (const p of r.pillars) {
     lines.push(`### ${p.title}`);
@@ -45,7 +45,7 @@ export function renderTerminal(r: Report): string {
   const lines: string[] = [];
   lines.push(`AIMature: ${r.level} (${r.levelLabel})  score ${r.overallScore.toFixed(1)}/100`);
   if (r.cappedBy) lines.push(`  [capped by ${r.cappedBy}]`);
-  for (const p of r.pillars) lines.push(`  ${p.title.padEnd(28)} ${p.score.toFixed(1)}`);
+  for (const p of r.pillars) lines.push(`  ${p.title.padEnd(28)} ${p.measured === false ? 'n/a' : p.score.toFixed(1)}`);
   if (r.uncovered.length) lines.push(`  uncovered: ${r.uncovered.join(', ')}`);
   return lines.join('\n');
 }

@@ -64,13 +64,26 @@ export function score(framework: Framework, findings: Finding[]): Report {
       ? covered.reduce((a, x) => a + x.c.score * x.weight, 0) / wsum
       : 0;
 
-    pillars.push({ id: pillar.id, title: pillar.title, score: pillarScore, criteria: criteriaResults });
+    pillars.push({
+      id: pillar.id,
+      title: pillar.title,
+      score: pillarScore,
+      measured: criteriaResults.length > 0,
+      criteria: criteriaResults,
+    });
   }
 
-  const overallScore = framework.pillars.reduce((a, p) => {
+  const measured = framework.pillars.filter((p) => {
     const pr = pillars.find((x) => x.id === p.id)!;
-    return a + pr.score * p.weight;
-  }, 0);
+    return pr.criteria.length > 0;
+  });
+  const totalWeight = measured.reduce((a, p) => a + p.weight, 0);
+  const overallScore = totalWeight > 0
+    ? measured.reduce((a, p) => {
+        const pr = pillars.find((x) => x.id === p.id)!;
+        return a + pr.score * p.weight;
+      }, 0) / totalWeight
+    : 0;
 
   let { level, label } = levelForScore(framework, overallScore);
   let cappedBy: string | undefined;
