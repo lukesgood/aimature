@@ -7,6 +7,7 @@ import { analyze } from './core/analyze.js';
 import { renderJson, renderMarkdown, renderTerminal } from './report/render.js';
 import { createAnthropicClient, type LlmClient } from './llm/reviewer.js';
 import { createClaudeCliClient, claudeCliAvailable, type CliRunner } from './llm/cli.js';
+import { createLogger, type LogLevel } from './core/logger.js';
 import type { ExecFn } from './adapters/types.js';
 
 export interface CliDeps {
@@ -48,10 +49,16 @@ export async function runScan(argv: string[], deps: CliDeps): Promise<number> {
     .option('--format <type>', 'terminal | json | markdown', 'terminal')
     .option('--out <file>', 'write report to a file')
     .option('--config <file>', 'custom framework.yaml path')
+    .option('-v, --verbose', 'verbose diagnostics on stderr')
+    .option('-q, --quiet', 'suppress diagnostics (errors only)')
     .action(async (path: string, opts: any) => {
       const key = deps.env.ANTHROPIC_API_KEY;
       const cliRunner = deps.cliRunner ?? realCliRunner;
       let llmClient: LlmClient | null = null;
+
+      // Diagnostics go to stderr so report stdout (e.g. JSON) stays clean.
+      const level: LogLevel = opts.verbose ? 'debug' : opts.quiet ? 'error' : 'warn';
+      const logger = createLogger({ level, write: (s) => process.stderr.write(s) });
 
       // Resolve provider: explicit flag wins; otherwise default to the Claude
       // Code CLI when --llm is set, or the API path when only a key is present.
@@ -85,6 +92,7 @@ export async function runScan(argv: string[], deps: CliDeps): Promise<number> {
         exec: realExec,
         useTools: opts.tools !== false,
         llmClient,
+        logger,
       });
 
       const rendered =

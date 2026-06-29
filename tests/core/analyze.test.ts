@@ -3,6 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { analyze } from '../../src/core/analyze.js';
+import { createLogger } from '../../src/core/logger.js';
 
 let dir: string;
 beforeAll(() => {
@@ -36,5 +37,18 @@ describe('analyze', () => {
     const r = await analyze({ rootDir: dir, useTools: false, llmClient: null });
     expect(typeof r.overallScore).toBe('number');
     expect(r.pillars).toHaveLength(4);
+  });
+
+  it('emits diagnostics through an injected logger', async () => {
+    const lines: string[] = [];
+    const logger = createLogger({ level: 'debug', write: (s) => lines.push(s) });
+    await analyze({ rootDir: dir, useTools: false, llmClient: null, logger });
+    const text = lines.join('');
+    expect(text).toContain('scan started');
+    expect(text).toContain('scan complete');
+    // per-layer debug line for a collector that ran
+    expect(text).toContain('"layer":"secrets"');
+    // Layer 3 skipped because no client
+    expect(text).toContain('Layer 3 skipped');
   });
 });
